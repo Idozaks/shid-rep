@@ -1,0 +1,7 @@
+{
+  "name": "Shidurit AI Voice Representative",
+  "description": "A Hebrew-speaking AI voice assistant for business representatives, allowing customizable company profiles with specific knowledge and personalities.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
