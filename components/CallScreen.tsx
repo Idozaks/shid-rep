@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { GoogleGenAI, LiveServerMessage, Modality, Chat, GenerateContentResponse } from '@google/genai';
 import { CompanyProfile, CallState, ChatMessage } from '../types';
@@ -285,60 +286,60 @@ const CallScreen: React.FC<CallScreenProps> = ({ profile, onEndCall, initialMode
       <div className="absolute inset-0 bg-black/20 pointer-events-none"></div>
       
       {/* Header */}
-      <div className="p-8 flex flex-row justify-between items-start relative z-10 animate-fade-scale">
-        <div className="flex items-center gap-4">
+      <div className="p-4 sm:p-8 flex flex-row justify-between items-center relative z-10 animate-fade-scale">
+        <div className="flex items-center gap-2 sm:gap-4">
           <button 
             onClick={() => { disconnectLiveSession(); disconnectTextChatSession(); onEndCall(); }} 
-            className="bg-[#ff4d4d] hover:bg-red-600 w-14 h-14 rounded-2xl flex items-center justify-center transition-all shadow-2xl active:scale-90"
+            className="bg-[#ff4d4d] hover:bg-red-600 w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center transition-all shadow-2xl active:scale-90"
           >
-            <svg className="w-7 h-7 text-white stroke-[3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 sm:w-7 sm:h-7 text-white stroke-[3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
           <button 
             onClick={toggleInputMode}
-            className={`px-5 py-3 rounded-2xl font-bold text-sm transition-all shadow-lg active:scale-95 ${
+            className={`px-3 py-2 sm:px-5 sm:py-3 rounded-xl sm:rounded-2xl font-bold text-xs sm:text-sm transition-all shadow-lg active:scale-95 ${
               callState.isTextMode ? 'bg-white/20' : 'bg-white/10'
             } hover:bg-white/30`}
           >
-            {callState.isTextMode ? 'מעבר לדיבור קולי' : 'מעבר להקלדה'}
+            {callState.isTextMode ? 'מעבר לקול' : 'מעבר להקלדה'}
           </button>
         </div>
 
-        <div className="flex items-center gap-4 text-right">
+        <div className="flex items-center gap-3 text-right">
           <div className="flex flex-col items-end">
-            <h2 className="text-2xl font-black tracking-tight">{profile.name}</h2>
-            <div className="flex items-center gap-2 mt-1">
-              <div className={`w-2 h-2 rounded-full ${callState.isActive ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
-              <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest">נציג חי בעברית</p>
+            <h2 className="text-lg sm:text-2xl font-black tracking-tight line-clamp-1">{profile.name}</h2>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <div className={`w-1.5 h-1.5 rounded-full ${callState.isActive ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
+              <p className="text-white/60 text-[8px] sm:text-[10px] font-bold uppercase tracking-widest">נציג חי</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col items-center justify-center relative px-6 z-10">
+      <div className="flex-1 flex flex-col items-center justify-center relative px-4 sm:px-6 z-10 min-h-0">
         {callState.isConnecting ? (
-          <div className="flex flex-col items-center gap-8 animate-pulse">
-            <div className="w-20 h-20 border-4 border-white/10 border-t-white rounded-full animate-spin"></div>
-            <p className="text-xl font-bold opacity-60">מייצר חיבור מאובטח...</p>
+          <div className="flex flex-col items-center gap-4 sm:gap-8 animate-pulse">
+            <div className="w-12 h-12 sm:w-20 sm:h-20 border-4 border-white/10 border-t-white rounded-full animate-spin"></div>
+            <p className="text-base sm:text-xl font-bold opacity-60">מתחבר...</p>
           </div>
         ) : callState.error ? (
-          <div className="text-center p-10 bg-black/30 backdrop-blur-3xl rounded-[3rem] border border-white/10 max-w-sm animate-elastic">
-            <p className="text-red-300 font-bold mb-8 text-lg">{callState.error}</p>
+          <div className="text-center p-6 sm:p-10 bg-black/30 backdrop-blur-3xl rounded-[2rem] sm:rounded-[3rem] border border-white/10 max-w-sm animate-elastic mx-4">
+            <p className="text-red-300 font-bold mb-6 sm:mb-8 text-base sm:text-lg">{callState.error}</p>
             <button 
               onClick={callState.isTextMode ? connectTextChatSession : connectLiveSession} 
-              className="bg-white text-gray-900 px-10 py-4 rounded-2xl font-black shadow-2xl hover:scale-105 active:scale-95 transition-all"
+              className="bg-white text-gray-900 px-8 py-3 sm:px-10 sm:py-4 rounded-xl sm:rounded-2xl font-black shadow-2xl hover:scale-105 active:scale-95 transition-all"
             >
               נסה שוב
             </button>
           </div>
         ) : callState.isTextMode ? (
-          <div className="w-full max-w-2xl h-full flex flex-col py-4 animate-fade-scale">
-            <div className="flex-1 overflow-y-auto px-4 space-y-4 custom-scrollbar dark-scrollbar mb-6 pb-4">
+          <div className="w-full max-w-2xl h-full flex flex-col py-2 sm:py-4 animate-fade-scale">
+            <div className="flex-1 overflow-y-auto px-2 sm:px-4 space-y-3 sm:space-y-4 custom-scrollbar dark-scrollbar mb-4 pb-4">
               {callState.textChatHistory.map((msg, i) => (
                 <div key={i} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`p-5 rounded-[2rem] max-w-[85%] shadow-xl text-lg leading-relaxed ${
+                  <div className={`p-3 sm:p-5 rounded-2xl sm:rounded-[2rem] max-w-[90%] sm:max-w-[85%] shadow-xl text-base sm:text-lg leading-relaxed ${
                     msg.sender === 'user' ? 'bg-blue-600 rounded-br-none msg-user' : 'bg-white/10 backdrop-blur-md border border-white/20 rounded-bl-none msg-bot'
                   }`}>
                     {msg.text}
@@ -347,7 +348,7 @@ const CallScreen: React.FC<CallScreenProps> = ({ profile, onEndCall, initialMode
               ))}
               {callState.isBotTyping && (
                 <div className="flex justify-start">
-                  <div className="p-5 rounded-[2rem] rounded-bl-none bg-white/10 backdrop-blur-md border border-white/20 flex gap-2 items-center msg-bot">
+                  <div className="p-3 sm:p-5 rounded-2xl sm:rounded-[2rem] rounded-bl-none bg-white/10 backdrop-blur-md border border-white/20 flex gap-1.5 sm:gap-2 items-center msg-bot">
                     <div className="typing-dot bg-white"></div>
                     <div className="typing-dot bg-white"></div>
                     <div className="typing-dot bg-white"></div>
@@ -356,47 +357,47 @@ const CallScreen: React.FC<CallScreenProps> = ({ profile, onEndCall, initialMode
               )}
               <div ref={chatHistoryEndRef} />
             </div>
-            <form onSubmit={handleSendText} className="flex gap-2 p-2 bg-white/5 backdrop-blur-3xl rounded-[2.5rem] border border-white/10 shadow-2xl focus-within:border-white/30 transition-all duration-300">
+            <form onSubmit={handleSendText} className="flex gap-2 p-1.5 sm:p-2 bg-white/5 backdrop-blur-3xl rounded-2xl sm:rounded-[2.5rem] border border-white/10 shadow-2xl focus-within:border-white/30 transition-all duration-300">
               <input 
                 autoFocus
                 type="text"
                 value={currentTextInput}
                 onChange={e => setCurrentTextInput(e.target.value)}
-                placeholder="הקלד כאן הודעה..."
-                className="flex-1 bg-transparent px-8 py-5 outline-none text-white text-xl placeholder:text-white/30"
+                placeholder="הקלד כאן..."
+                className="flex-1 bg-transparent px-4 sm:px-8 py-3 sm:py-5 outline-none text-white text-lg sm:text-xl placeholder:text-white/30"
               />
               <button 
                 type="submit" 
                 disabled={!currentTextInput.trim() || callState.isBotTyping} 
-                className="bg-white text-gray-900 px-10 rounded-[2rem] font-black text-lg transition-all shadow-xl hover:bg-gray-100 active:scale-95 disabled:opacity-20 disabled:scale-100"
+                className="bg-white text-gray-900 px-6 sm:px-10 rounded-xl sm:rounded-[2rem] font-black text-sm sm:text-lg transition-all shadow-xl hover:bg-gray-100 active:scale-95 disabled:opacity-20 disabled:scale-100"
               >
                 שלח
               </button>
             </form>
           </div>
         ) : (
-          <div className="w-full max-w-xl text-center flex flex-col items-center animate-elastic">
-            <div className="mb-16 flex gap-1.5 items-end h-24">
+          <div className="w-full max-w-xl text-center flex flex-col items-center animate-elastic min-h-0">
+            <div className="mb-6 sm:mb-16 flex gap-1 sm:gap-1.5 items-end h-16 sm:h-24">
               {[...Array(20)].map((_, i) => (
                 <div 
                   key={i} 
-                  className="w-2 bg-blue-400 rounded-full transition-all duration-100 shadow-[0_0_15px_rgba(96,165,250,0.5)]"
+                  className="w-1.5 sm:w-2 bg-blue-400 rounded-full transition-all duration-100 shadow-[0_0_15px_rgba(96,165,250,0.5)]"
                   style={{ height: `${Math.max(10, micLevel * (0.4 + Math.random() * 0.8))}%` }}
                 ></div>
               ))}
             </div>
 
-            <div className="bg-white/5 backdrop-blur-3xl rounded-[4rem] p-12 border border-white/10 w-full shadow-2xl relative overflow-hidden group">
+            <div className="bg-white/5 backdrop-blur-3xl rounded-[2.5rem] sm:rounded-[4rem] p-6 sm:p-12 border border-white/10 w-full shadow-2xl relative overflow-hidden group">
                <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none"></div>
-               <div className="min-h-[160px] flex flex-col justify-center relative z-10">
-                 {userSpeech && <p className="text-white/40 text-lg mb-6 font-medium animate-fade-scale italic">שמעתי: "{userSpeech}"</p>}
-                 <p className="text-4xl font-black leading-tight tracking-tight">
+               <div className="min-h-[120px] sm:min-h-[160px] flex flex-col justify-center relative z-10 overflow-y-auto max-h-[40vh] custom-scrollbar dark-scrollbar">
+                 {userSpeech && <p className="text-white/40 text-sm sm:text-lg mb-4 sm:mb-6 font-medium animate-fade-scale italic">שמעתי: "{userSpeech}"</p>}
+                 <p className="text-2xl sm:text-4xl font-black leading-tight tracking-tight">
                    {botSpeech || (micLevel > 25 ? "אני מקשיב..." : "נא לדבר...")}
                  </p>
                </div>
             </div>
             
-            <div className="mt-12 opacity-40 text-sm font-bold animate-pulse">
+            <div className="mt-6 sm:mt-12 opacity-40 text-[10px] sm:text-sm font-bold animate-pulse">
                השיחה מוקלטת לצרכי שיפור השירות
             </div>
           </div>
@@ -405,11 +406,11 @@ const CallScreen: React.FC<CallScreenProps> = ({ profile, onEndCall, initialMode
 
       {/* Transcription drawer for voice mode */}
       {!callState.isTextMode && (
-        <div className="h-1/4 bg-black/30 backdrop-blur-md border-t border-white/5 overflow-y-auto p-8 z-10 custom-scrollbar dark-scrollbar">
-          <div className="max-w-2xl mx-auto space-y-4">
-             {callState.transcription.length === 0 && <p className="text-center text-white/20 italic font-medium">התמליל יופיע כאן במהלך השיחה...</p>}
+        <div className="h-1/5 sm:h-1/4 bg-black/30 backdrop-blur-md border-t border-white/5 overflow-y-auto p-4 sm:p-8 z-10 custom-scrollbar dark-scrollbar shrink-0">
+          <div className="max-w-2xl mx-auto space-y-3 sm:space-y-4">
+             {callState.transcription.length === 0 && <p className="text-center text-white/20 italic font-medium text-xs sm:text-sm">התמליל יופיע כאן...</p>}
              {callState.transcription.map((line, i) => (
-               <div key={i} className="text-sm opacity-60 bg-white/5 p-4 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors animate-fade-scale">
+               <div key={i} className="text-xs sm:text-sm opacity-60 bg-white/5 p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-white/5 hover:bg-white/10 transition-colors animate-fade-scale">
                  {line}
                </div>
              ))}

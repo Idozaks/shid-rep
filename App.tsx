@@ -32,8 +32,10 @@ const App: React.FC = () => {
     const filteredDefaults = DEFAULT_PROFILES.filter(p => !customIds.has(p.id));
     
     return [...filteredDefaults, ...customProfiles].sort((a, b) => {
-      if (a.id === 'avia-storage-permanent') return -1;
-      if (a.id === 'xfiber-tech-support') return -1;
+      // Shidurit is always first
+      if (a.id === 'shidurit-main') return -1;
+      if (b.id === 'shidurit-main') return 1;
+      // Active profiles before examples
       if (a.isExample === b.isExample) return 0;
       return a.isExample ? 1 : -1;
     });
@@ -141,7 +143,7 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
-      <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
+      <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-[60]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
             <div className="bg-[#f5821f] p-2 rounded-lg shadow-lg shadow-orange-200">
