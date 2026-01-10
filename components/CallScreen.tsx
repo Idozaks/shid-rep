@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { GoogleGenAI, LiveServerMessage, Modality, Chat, GenerateContentResponse } from '@google/genai';
 import { CompanyProfile, CallState, ChatMessage } from '../types';
@@ -32,11 +31,10 @@ const CallScreen: React.FC<CallScreenProps> = ({ profile, onEndCall, initialMode
   
   const [userSpeech, setUserSpeech] = useState("");
   const [botSpeech, setBotSpeech] = useState("");
-  const [micLevel, setMicLevel] = useState(0); // For visual feedback
+  const [micLevel, setMicLevel] = useState(0); 
   const [currentTextInput, setCurrentTextInput] = useState("");
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [debugLogs, setDebugLogs] = useState<string[]>([]);
-  const [showDebug, setShowDebug] = useState(false);
 
   const sessionPromiseRef = useRef<Promise<any> | null>(null);
   const chatSessionRef = useRef<Chat | null>(null);
@@ -122,24 +120,18 @@ const CallScreen: React.FC<CallScreenProps> = ({ profile, onEndCall, initialMode
     
     try {
       if (!process.env.API_KEY) throw new Error("API Key is missing");
-      
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      
       const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
       audioContextRef.current = audioCtx;
       outputAudioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
-      
       if (audioCtx.state === 'suspended') await audioCtx.resume();
-
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
-      
       const analyser = audioCtx.createAnalyser();
       analyser.fftSize = 256;
       analyserRef.current = analyser;
       const micSource = audioCtx.createMediaStreamSource(stream);
       micSource.connect(analyser);
-
       const dataArray = new Uint8Array(analyser.frequencyBinCount);
       const updateMicLevel = () => {
         if (!analyserRef.current) return;
@@ -157,20 +149,15 @@ const CallScreen: React.FC<CallScreenProps> = ({ profile, onEndCall, initialMode
             if (connectionTimeoutRef.current) window.clearTimeout(connectionTimeoutRef.current);
             addLog("Voice connection opened.");
             setCallState(prev => ({ ...prev, isConnecting: false, isActive: true }));
-            
             const scriptProcessor = audioCtx.createScriptProcessor(4096, 1, 1);
             scriptProcessor.onaudioprocess = (e) => {
               if (sessionPromiseRef.current) {
                 const inputData = e.inputBuffer.getChannelData(0);
                 const int16 = new Int16Array(inputData.length);
                 for (let i = 0; i < inputData.length; i++) int16[i] = inputData[i] * 32768;
-                
                 sessionPromiseRef.current.then(session => {
                   session.sendRealtimeInput({ 
-                    media: { 
-                      data: encode(new Uint8Array(int16.buffer)), 
-                      mimeType: 'audio/pcm;rate=16000' 
-                    } 
+                    media: { data: encode(new Uint8Array(int16.buffer)), mimeType: 'audio/pcm;rate=16000' } 
                   });
                 });
               }
@@ -179,20 +166,12 @@ const CallScreen: React.FC<CallScreenProps> = ({ profile, onEndCall, initialMode
             scriptProcessor.connect(audioCtx.destination);
           },
           onmessage: async (message: LiveServerMessage) => {
-            if (message.serverContent?.inputTranscription) {
-              setUserSpeech(message.serverContent.inputTranscription.text);
-            }
-            if (message.serverContent?.outputTranscription) {
-              setBotSpeech(prev => prev + message.serverContent?.outputTranscription?.text);
-            }
+            if (message.serverContent?.inputTranscription) setUserSpeech(message.serverContent.inputTranscription.text);
+            if (message.serverContent?.outputTranscription) setBotSpeech(prev => prev + message.serverContent?.outputTranscription?.text);
             if (message.serverContent?.turnComplete) {
-              setCallState(prev => ({ 
-                ...prev, 
-                transcription: [...prev.transcription, `משתמש: ${userSpeech}`, `נציג: ${botSpeech}`] 
-              }));
+              setCallState(prev => ({ ...prev, transcription: [...prev.transcription, `משתמש: ${userSpeech}`, `נציג: ${botSpeech}`] }));
               setUserSpeech(""); setBotSpeech("");
             }
-
             const modelTurnParts = message.serverContent?.modelTurn?.parts;
             if (modelTurnParts && modelTurnParts.length > 0 && outputAudioContextRef.current) {
               for (const part of modelTurnParts) {
@@ -222,16 +201,13 @@ const CallScreen: React.FC<CallScreenProps> = ({ profile, onEndCall, initialMode
           outputAudioTranscription: {}
         }
       });
-      
       sessionPromiseRef.current = sessionPromise;
-      
       connectionTimeoutRef.current = window.setTimeout(() => {
         if (!callState.isActive && callState.isConnecting) {
           setCallState(prev => ({ ...prev, error: "פסק זמן בחיבור הקולי.", isConnecting: false }));
           disconnectLiveSession();
         }
       }, 20000);
-
     } catch (err: any) {
       setCallState(prev => ({ ...prev, error: err.message, isConnecting: false }));
       disconnectLiveSession();
@@ -272,24 +248,12 @@ const CallScreen: React.FC<CallScreenProps> = ({ profile, onEndCall, initialMode
   const handleSendText = useCallback(async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!currentTextInput.trim() || !chatSessionRef.current) return;
-
     const userMsg = currentTextInput.trim();
     setCurrentTextInput("");
-
-    setCallState(prev => ({
-      ...prev,
-      textChatHistory: [...prev.textChatHistory, { sender: 'user', text: userMsg }],
-      isBotTyping: true,
-    }));
-
+    setCallState(prev => ({ ...prev, textChatHistory: [...prev.textChatHistory, { sender: 'user', text: userMsg }], isBotTyping: true }));
     try {
       const stream = await chatSessionRef.current.sendMessageStream({ message: userMsg });
-      
-      setCallState(prev => ({
-        ...prev,
-        textChatHistory: [...prev.textChatHistory, { sender: 'bot', text: "" }]
-      }));
-
+      setCallState(prev => ({ ...prev, textChatHistory: [...prev.textChatHistory, { sender: 'bot', text: "" }] }));
       let fullBotResponse = "";
       for await (const chunk of stream) {
         const c = chunk as GenerateContentResponse;
@@ -311,19 +275,17 @@ const CallScreen: React.FC<CallScreenProps> = ({ profile, onEndCall, initialMode
   }, [currentTextInput, addLog, addToast]);
 
   useEffect(() => {
-    if (initialMode === 'text') {
-      connectTextChatSession();
-    } else {
-      connectLiveSession();
-    }
+    if (initialMode === 'text') connectTextChatSession();
+    else connectLiveSession();
     return () => { disconnectLiveSession(); disconnectTextChatSession(); };
   }, [connectLiveSession, disconnectLiveSession, disconnectTextChatSession, connectTextChatSession, initialMode]);
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col text-white select-none overflow-hidden" style={{ backgroundColor: themeColor }}>
+    <div className="fixed inset-0 z-[100] flex flex-col text-white select-none overflow-hidden transition-colors duration-1000" style={{ backgroundColor: themeColor }}>
       <div className="absolute inset-0 bg-black/20 pointer-events-none"></div>
       
-      <div className="p-8 flex flex-row justify-between items-start relative z-10">
+      {/* Header */}
+      <div className="p-8 flex flex-row justify-between items-start relative z-10 animate-fade-scale">
         <div className="flex items-center gap-4">
           <button 
             onClick={() => { disconnectLiveSession(); disconnectTextChatSession(); onEndCall(); }} 
@@ -336,95 +298,120 @@ const CallScreen: React.FC<CallScreenProps> = ({ profile, onEndCall, initialMode
           <button 
             onClick={toggleInputMode}
             className={`px-5 py-3 rounded-2xl font-bold text-sm transition-all shadow-lg active:scale-95 ${
-              callState.isTextMode ? 'bg-blue-600' : 'bg-white/10'
-            }`}
+              callState.isTextMode ? 'bg-white/20' : 'bg-white/10'
+            } hover:bg-white/30`}
           >
-            {callState.isTextMode ? 'מעבר לדיבור' : 'מעבר להקלדה'}
+            {callState.isTextMode ? 'מעבר לדיבור קולי' : 'מעבר להקלדה'}
           </button>
         </div>
 
         <div className="flex items-center gap-4 text-right">
           <div className="flex flex-col items-end">
-            <h2 className="text-2xl font-black">{profile.name}</h2>
+            <h2 className="text-2xl font-black tracking-tight">{profile.name}</h2>
             <div className="flex items-center gap-2 mt-1">
               <div className={`w-2 h-2 rounded-full ${callState.isActive ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></div>
-              <p className="text-white/60 text-[10px] font-bold">נציג חי בעברית</p>
+              <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest">נציג חי בעברית</p>
             </div>
           </div>
         </div>
       </div>
 
+      {/* Main content */}
       <div className="flex-1 flex flex-col items-center justify-center relative px-6 z-10">
         {callState.isConnecting ? (
-          <div className="flex flex-col items-center gap-6">
-            <div className="w-16 h-16 border-4 border-white/10 border-t-white rounded-full animate-spin"></div>
-            <p className="text-lg font-bold opacity-80">מתחבר...</p>
+          <div className="flex flex-col items-center gap-8 animate-pulse">
+            <div className="w-20 h-20 border-4 border-white/10 border-t-white rounded-full animate-spin"></div>
+            <p className="text-xl font-bold opacity-60">מייצר חיבור מאובטח...</p>
           </div>
         ) : callState.error ? (
-          <div className="text-center p-8 bg-red-500/10 rounded-3xl border border-red-500/20 max-w-sm">
-            <p className="text-red-300 font-bold mb-6">{callState.error}</p>
-            <button onClick={callState.isTextMode ? connectTextChatSession : connectLiveSession} className="bg-white text-gray-900 px-8 py-3 rounded-xl font-bold">נסה שוב</button>
+          <div className="text-center p-10 bg-black/30 backdrop-blur-3xl rounded-[3rem] border border-white/10 max-w-sm animate-elastic">
+            <p className="text-red-300 font-bold mb-8 text-lg">{callState.error}</p>
+            <button 
+              onClick={callState.isTextMode ? connectTextChatSession : connectLiveSession} 
+              className="bg-white text-gray-900 px-10 py-4 rounded-2xl font-black shadow-2xl hover:scale-105 active:scale-95 transition-all"
+            >
+              נסה שוב
+            </button>
           </div>
         ) : callState.isTextMode ? (
-          <div className="w-full max-w-2xl h-full flex flex-col py-4">
-            <div className="flex-1 overflow-y-auto px-2 space-y-4 custom-scrollbar mb-4">
+          <div className="w-full max-w-2xl h-full flex flex-col py-4 animate-fade-scale">
+            <div className="flex-1 overflow-y-auto px-4 space-y-4 custom-scrollbar dark-scrollbar mb-6 pb-4">
               {callState.textChatHistory.map((msg, i) => (
                 <div key={i} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`p-4 rounded-2xl max-w-[85%] shadow-md ${msg.sender === 'user' ? 'bg-blue-600 rounded-br-none' : 'bg-white/10 border border-white/20 rounded-bl-none'}`}>
+                  <div className={`p-5 rounded-[2rem] max-w-[85%] shadow-xl text-lg leading-relaxed ${
+                    msg.sender === 'user' ? 'bg-blue-600 rounded-br-none msg-user' : 'bg-white/10 backdrop-blur-md border border-white/20 rounded-bl-none msg-bot'
+                  }`}>
                     {msg.text}
                   </div>
                 </div>
               ))}
               {callState.isBotTyping && (
                 <div className="flex justify-start">
-                  <div className="p-4 rounded-2xl bg-white/5 border border-white/10 animate-pulse text-sm opacity-60">
-                    הנציג כותב...
+                  <div className="p-5 rounded-[2rem] rounded-bl-none bg-white/10 backdrop-blur-md border border-white/20 flex gap-2 items-center msg-bot">
+                    <div className="typing-dot bg-white"></div>
+                    <div className="typing-dot bg-white"></div>
+                    <div className="typing-dot bg-white"></div>
                   </div>
                 </div>
               )}
               <div ref={chatHistoryEndRef} />
             </div>
-            <form onSubmit={handleSendText} className="flex gap-2 p-2 bg-white/5 rounded-3xl border border-white/10">
+            <form onSubmit={handleSendText} className="flex gap-2 p-2 bg-white/5 backdrop-blur-3xl rounded-[2.5rem] border border-white/10 shadow-2xl focus-within:border-white/30 transition-all duration-300">
               <input 
                 autoFocus
                 type="text"
                 value={currentTextInput}
                 onChange={e => setCurrentTextInput(e.target.value)}
-                placeholder="הקלד כאן..."
-                className="flex-1 bg-transparent px-6 py-4 outline-none text-white text-lg"
+                placeholder="הקלד כאן הודעה..."
+                className="flex-1 bg-transparent px-8 py-5 outline-none text-white text-xl placeholder:text-white/30"
               />
-              <button type="submit" disabled={!currentTextInput.trim() || callState.isBotTyping} className="bg-white text-gray-900 px-8 rounded-2xl font-bold transition-all active:scale-95 disabled:opacity-50">שלח</button>
+              <button 
+                type="submit" 
+                disabled={!currentTextInput.trim() || callState.isBotTyping} 
+                className="bg-white text-gray-900 px-10 rounded-[2rem] font-black text-lg transition-all shadow-xl hover:bg-gray-100 active:scale-95 disabled:opacity-20 disabled:scale-100"
+              >
+                שלח
+              </button>
             </form>
           </div>
         ) : (
-          <div className="w-full max-w-xl text-center flex flex-col items-center">
-            <div className="mb-12 flex gap-1 items-end h-16">
-              {[...Array(15)].map((_, i) => (
+          <div className="w-full max-w-xl text-center flex flex-col items-center animate-elastic">
+            <div className="mb-16 flex gap-1.5 items-end h-24">
+              {[...Array(20)].map((_, i) => (
                 <div 
                   key={i} 
-                  className="w-1.5 bg-blue-400 rounded-full transition-all duration-75"
-                  style={{ height: `${Math.max(10, micLevel * (0.5 + Math.random()))}%` }}
+                  className="w-2 bg-blue-400 rounded-full transition-all duration-100 shadow-[0_0_15px_rgba(96,165,250,0.5)]"
+                  style={{ height: `${Math.max(10, micLevel * (0.4 + Math.random() * 0.8))}%` }}
                 ></div>
               ))}
             </div>
 
-            <div className="bg-white/5 backdrop-blur-3xl rounded-[3rem] p-10 border border-white/10 w-full shadow-2xl">
-               <div className="min-h-[150px] flex flex-col justify-center">
-                 {userSpeech && <p className="text-white/40 text-sm mb-4">שמעתי: "{userSpeech}"</p>}
-                 <p className="text-3xl font-black leading-tight">
-                   {botSpeech || (micLevel > 20 ? "אני מקשיב..." : "נא לדבר...")}
+            <div className="bg-white/5 backdrop-blur-3xl rounded-[4rem] p-12 border border-white/10 w-full shadow-2xl relative overflow-hidden group">
+               <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none"></div>
+               <div className="min-h-[160px] flex flex-col justify-center relative z-10">
+                 {userSpeech && <p className="text-white/40 text-lg mb-6 font-medium animate-fade-scale italic">שמעתי: "{userSpeech}"</p>}
+                 <p className="text-4xl font-black leading-tight tracking-tight">
+                   {botSpeech || (micLevel > 25 ? "אני מקשיב..." : "נא לדבר...")}
                  </p>
                </div>
+            </div>
+            
+            <div className="mt-12 opacity-40 text-sm font-bold animate-pulse">
+               השיחה מוקלטת לצרכי שיפור השירות
             </div>
           </div>
         )}
       </div>
 
+      {/* Transcription drawer for voice mode */}
       {!callState.isTextMode && (
-        <div className="h-1/4 bg-black/20 border-t border-white/5 overflow-y-auto p-8 z-10">
-          <div className="max-w-2xl mx-auto space-y-3">
+        <div className="h-1/4 bg-black/30 backdrop-blur-md border-t border-white/5 overflow-y-auto p-8 z-10 custom-scrollbar dark-scrollbar">
+          <div className="max-w-2xl mx-auto space-y-4">
+             {callState.transcription.length === 0 && <p className="text-center text-white/20 italic font-medium">התמליל יופיע כאן במהלך השיחה...</p>}
              {callState.transcription.map((line, i) => (
-               <div key={i} className="text-sm opacity-60 bg-white/5 p-3 rounded-xl">{line}</div>
+               <div key={i} className="text-sm opacity-60 bg-white/5 p-4 rounded-2xl border border-white/5 hover:bg-white/10 transition-colors animate-fade-scale">
+                 {line}
+               </div>
              ))}
           </div>
         </div>
