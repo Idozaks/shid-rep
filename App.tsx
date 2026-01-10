@@ -117,11 +117,16 @@ const App: React.FC = () => {
 
   if (isCalling && activeProfile) {
     let enrichedInstructions = activeProfile.instructions;
+    let hasContext = false;
+    
     if (contextData) {
+      hasContext = true;
       const details = Object.entries(contextData)
         .map(([k, v]) => `${k}: ${v}`)
         .join('\n');
-      enrichedInstructions += `\n\nפרטים שנאספו מהטופס הדיגיטלי:\n${details}\nאנא התייחס למידע זה בתחילת השיחה.`;
+      enrichedInstructions += `\n\nפרטים שנאספו מהטופס הדיגיטלי:\n${details}\n
+      הנחיה קריטית: מכיוון שיש לך את פרטי המשתמש, עליך להיות זה שפותח את השיחה! 
+      אל תחכה שהמשתמש ידבר. פנה אליו בשמו הפרטי, ציין שקיבלת את הפנייה שלו לגבי "${contextData.needs || contextData.issue || 'הנושא המבוקש'}" והצע עזרה מיידית.`;
     }
 
     const enrichedProfile = {
@@ -133,6 +138,7 @@ const App: React.FC = () => {
       <CallScreen 
         profile={enrichedProfile} 
         initialMode={initialCallMode}
+        hasContext={hasContext}
         onEndCall={() => {
           setIsCalling(false);
           setContextData(null);
